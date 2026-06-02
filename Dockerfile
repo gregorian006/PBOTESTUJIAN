@@ -57,15 +57,9 @@ EXPOSE 8080
 # -Xms64m         : heap awal kecil, biarkan JVM tumbuh sesuai kebutuhan
 # -XX:+UseSerialGC: GC ringan untuk container kecil
 # -Dserver.port   : ambil PORT dari Railway env var
-ENTRYPOINT ["sh", "-c", \
-  "java \
-   -Xmx256m -Xms64m \
-   -XX:+UseSerialGC \
-   -XX:MaxMetaspaceSize=128m \
-   -Djava.security.egd=file:/dev/./urandom \
-   -Dserver.port=${PORT:-8080} \
-   -Dspring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:-PLACEHOLDER} \
-   -Dspring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:-PLACEHOLDER} \
-   -Dspring.mail.username=${SPRING_MAIL_USERNAME:-} \
-   -Dspring.mail.password=${SPRING_MAIL_PASSWORD:-} \
-   -jar app.jar"]
+ENTRYPOINT ["java", \
+  "-Xmx256m", "-Xms64m", \
+  "-XX:+UseSerialGC", \
+  "-XX:MaxMetaspaceSize=128m", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-jar", "app.jar"]
