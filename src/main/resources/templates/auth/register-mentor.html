@@ -522,14 +522,18 @@
             (function () {
                 const input = document.getElementById("institusiInput");
                 const dropdown = document.getElementById("institusiDropdown");
+                const tingkat = document.querySelector(
+                    'select[name="tingkatPendidikan"]',
+                );
                 if (!input || !dropdown) return;
-                let list = [];
+                let timer;
 
-                fetch("/data/universitas-indonesia.json")
-                    .then((r) => r.json())
-                    .then((d) => {
-                        list = d;
-                    });
+                function getApiPath() {
+                    const val = tingkat ? tingkat.value : "";
+                    return val.startsWith("SMA")
+                        ? "/api/cari/sekolah"
+                        : "/api/cari/universitas";
+                }
 
                 function positionDropdown() {
                     const r = input.getBoundingClientRect();
@@ -539,33 +543,39 @@
                 }
 
                 input.addEventListener("input", () => {
-                    const q = input.value.trim().toLowerCase();
+                    clearTimeout(timer);
+                    const q = input.value.trim();
                     dropdown.innerHTML = "";
                     if (q.length < 2) {
                         dropdown.classList.add("hidden");
                         return;
                     }
-                    const hits = list
-                        .filter((u) => u.toLowerCase().includes(q))
-                        .slice(0, 8);
-                    if (!hits.length) {
-                        dropdown.classList.add("hidden");
-                        return;
-                    }
-                    hits.forEach((u) => {
-                        const item = document.createElement("div");
-                        item.className =
-                            "px-4 py-3 cursor-pointer hover:bg-blue-50 text-sm text-gray-800 border-b border-gray-100 last:border-0 transition-colors";
-                        item.textContent = u;
-                        item.addEventListener("mousedown", (e) => {
-                            e.preventDefault();
-                            input.value = u;
-                            dropdown.classList.add("hidden");
-                        });
-                        dropdown.appendChild(item);
-                    });
-                    positionDropdown();
-                    dropdown.classList.remove("hidden");
+                    timer = setTimeout(() => {
+                        fetch(getApiPath() + "?q=" + encodeURIComponent(q))
+                            .then((r) => r.json())
+                            .then((list) => {
+                                dropdown.innerHTML = "";
+                                if (!list.length) {
+                                    dropdown.classList.add("hidden");
+                                    return;
+                                }
+                                list.forEach((u) => {
+                                    const item = document.createElement("div");
+                                    item.className =
+                                        "px-4 py-3 cursor-pointer hover:bg-blue-50 text-sm text-gray-800 border-b border-gray-100 last:border-0 transition-colors";
+                                    item.textContent = u;
+                                    item.addEventListener("mousedown", (e) => {
+                                        e.preventDefault();
+                                        input.value = u;
+                                        dropdown.classList.add("hidden");
+                                    });
+                                    dropdown.appendChild(item);
+                                });
+                                positionDropdown();
+                                dropdown.classList.remove("hidden");
+                            })
+                            .catch(() => dropdown.classList.add("hidden"));
+                    }, 350);
                 });
 
                 document.addEventListener("click", (e) => {
